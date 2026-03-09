@@ -3,6 +3,7 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragOverlay,
@@ -15,6 +16,7 @@ import {
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { useState } from 'react';
+import { X, ChevronLeft, ChevronRight, RotateCw, Trash2 } from 'lucide-react';
 import PageThumbnail, { ThumbnailCard } from './PageThumbnail';
 import UploadZone from './UploadZone';
 import SplitPanel from './SplitPanel';
@@ -58,6 +60,7 @@ export default function Workspace({
   onConvertFormatChange,
 }: WorkspaceProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [previewPageIndex, setPreviewPageIndex] = useState<number | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -65,10 +68,31 @@ export default function Workspace({
         distance: 8,
       },
     }),
+    useSensor(TouchSensor, {
+      // Press and hold for 250ms or move 5px to trigger drag
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  const previewPage = previewPageIndex !== null ? pages[previewPageIndex] : null;
+
+  const handlePrevPreview = () => {
+    if (previewPageIndex !== null && previewPageIndex > 0) {
+      setPreviewPageIndex(previewPageIndex - 1);
+    }
+  };
+
+  const handleNextPreview = () => {
+    if (previewPageIndex !== null && previewPageIndex < pages.length - 1) {
+      setPreviewPageIndex(previewPageIndex + 1);
+    }
+  };
 
   if (pages.length === 0) {
     return (
@@ -125,6 +149,7 @@ export default function Workspace({
                 onDelete={onDelete}
                 onToggleSelect={onToggleSelect}
                 onMovePage={onMovePage}
+                onClick={() => setPreviewPageIndex(index)}
               />
             ))}
           </div>
@@ -150,6 +175,75 @@ export default function Workspace({
           })() : null}
         </DragOverlay>
       </DndContext>
+
+      {/* Preview Modal */}
+      {previewPage && (
+        <div className="preview-modal" onClick={() => setPreviewPageIndex(null)}>
+          <div className="preview-modal-backdrop" />
+          <div className="preview-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="preview-modal-header">
+              <span className="preview-modal-title">
+                Page {previewPageIndex! + 1} of {pages.length}
+              </span>
+              <div className="preview-modal-actions">
+                <button
+                  className="preview-btn"
+                  onClick={() => onRotate(previewPage.id)}
+                  title="Rotate"
+                >
+                  <RotateCw size={20} />
+                </button>
+                <button
+                  className="preview-btn danger"
+                  onClick={() => {
+                    onDelete(previewPage.id);
+                    setPreviewPageIndex(null);
+                  }}
+                  title="Delete"
+                >
+                  <Trash2 size={20} />
+                </button>
+                <button
+                  className="preview-close"
+                  onClick={() => setPreviewPageIndex(null)}
+                >
+                  <X size={24} />
+                </button>
+              </div>
+            </div>
+
+            <div className="preview-modal-body">
+              <button
+                className="preview-nav-btn prev"
+                onClick={handlePrevPreview}
+                disabled={previewPageIndex === 0}
+              >
+                <ChevronLeft size={32} />
+              </button>
+
+              <div className="preview-image-container">
+                <img
+                  src={previewPage.thumbnail}
+                  alt={`Page ${previewPageIndex! + 1}`}
+                  style={{ transform: `rotate(${previewPage.rotation}deg)` }}
+                />
+              </div>
+
+              <button
+                className="preview-nav-btn next"
+                onClick={handleNextPreview}
+                disabled={previewPageIndex === pages.length - 1}
+              >
+                <ChevronRight size={32} />
+              </button>
+            </div>
+
+            <div className="preview-modal-footer">
+              <span className="preview-filename">{previewPage.fileName}</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

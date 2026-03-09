@@ -12,6 +12,7 @@ interface PageThumbnailProps {
   onDelete: (id: string) => void;
   onToggleSelect: (id: string) => void;
   onMovePage: (id: string, direction: 'left' | 'right') => void;
+  onClick?: () => void;
 }
 
 
@@ -28,6 +29,7 @@ export function ThumbnailCard({
   setNodeRef,
   attributes,
   listeners,
+  onClick,
 }: PageThumbnailProps & {
   style?: React.CSSProperties;
   isDragging?: boolean;
@@ -43,6 +45,7 @@ export function ThumbnailCard({
       ref={setNodeRef}
       style={style}
       className={`page-thumbnail animate-slide-up ${page.selected ? 'selected' : ''} ${isDragging ? 'dragging' : ''} ${isOverlay ? 'overlay' : ''}`}
+      onClick={onClick}
       {...attributes}
       {...listeners}
     >
@@ -119,16 +122,14 @@ export default function PageThumbnail(props: PageThumbnailProps) {
     opacity: isDragging ? 0 : 1, // Hide the original item when dragging
   };
 
-  const showMobileDragControls = props.activeTool === 'rearrange';
-
   return (
     <ThumbnailCard
       {...props}
       style={style}
       isDragging={isDragging}
       setNodeRef={setNodeRef}
-      attributes={showMobileDragControls ? undefined : attributes}
-      listeners={showMobileDragControls ? undefined : listeners}
+      attributes={attributes}
+      listeners={listeners}
     />
   );
 }
