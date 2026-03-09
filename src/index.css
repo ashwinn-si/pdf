@@ -136,8 +136,10 @@ input {
 /* === App Layout === */
 .app-layout {
   display: flex;
-  height: 100vh;
+  height: 100vh; /* fallback */
+  height: 100dvh; /* real height accounting for mobile UI */
   width: 100vw;
+  width: 100dvw;
   overflow: hidden;
 }
 
@@ -146,6 +148,7 @@ input {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0; /* Important for flex children scrolling to not overlap sidebar */
   position: relative;
 }
 
@@ -1056,7 +1059,7 @@ input {
 
   .sidebar {
     width: 100% !important;
-    height: 70px;
+    height: 80px;
     flex-direction: row;
     border-right: none;
     border-top: 1px solid var(--color-border);
@@ -1078,9 +1081,16 @@ input {
     display: flex;
     flex-direction: row;
     width: 100%;
-    padding: 0;
-    justify-content: space-around;
+    padding: 0 16px;
+    justify-content: flex-start;
     align-items: center;
+    overflow-x: auto;
+    gap: 16px;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .sidebar-section::-webkit-scrollbar {
+    display: none;
   }
 
   .sidebar-tool {
@@ -1125,7 +1135,7 @@ input {
 
   .workspace {
     padding: 16px;
-    padding-bottom: 30px;
+    padding-bottom: 40px;
   }
 
   .workspace-grid {
