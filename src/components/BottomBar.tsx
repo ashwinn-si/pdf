@@ -10,7 +10,7 @@ interface BottomBarProps {
   hasPages: boolean;
 }
 
-function getActionLabel(tool: Tool, selectedCount: number): string {
+function getActionLabel(tool: Tool): string {
   switch (tool) {
     case 'merge':
     case 'rearrange':
@@ -19,10 +19,6 @@ function getActionLabel(tool: Tool, selectedCount: number): string {
       return 'Split & Download';
     case 'compress':
       return 'Compress & Download';
-    case 'rotate':
-      return selectedCount > 0 ? `Rotate ${selectedCount} Page${selectedCount !== 1 ? 's' : ''}` : 'Select pages to rotate';
-    case 'delete':
-      return selectedCount > 0 ? `Delete ${selectedCount} Page${selectedCount !== 1 ? 's' : ''}` : 'Select pages to delete';
     case 'convert':
       return 'Convert & Download';
     case 'imageToPdf':
@@ -43,9 +39,7 @@ export default function BottomBar({
   if (!hasPages) return null;
 
   const isDisabled =
-    isProcessing ||
-    pageCount === 0 ||
-    ((activeTool === 'delete') && selectedCount === 0);
+    isProcessing || pageCount === 0;
 
   return (
     <div className="bottombar">
@@ -74,7 +68,7 @@ export default function BottomBar({
           ) : (
             <>
               <Download size={18} />
-              {getActionLabel(activeTool, selectedCount)}
+              {getActionLabel(activeTool)}
             </>
           )}
         </button>

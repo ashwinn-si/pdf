@@ -9,7 +9,6 @@ import ProgressOverlay from './components/ProgressOverlay';
 import { renderPdfThumbnails, type PageInfo } from './utils/pdfRenderer';
 import {
   storeFileBuffer,
-  clearFileBuffers,
   buildPdf,
   splitPdf,
   compressPdf,
