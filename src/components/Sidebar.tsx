@@ -40,7 +40,7 @@ export default function Sidebar({ activeTool, onSelectTool, pageCount, isOpen, o
           <FileText size={20} />
         </div>
         <div className="sidebar-logo-text">
-          <h1>PDF Studio</h1>
+          <h1>pdf.ash</h1>
           <span>All-in-one editor</span>
         </div>
       </div>
