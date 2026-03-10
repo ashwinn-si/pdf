@@ -15,12 +15,13 @@ import {
   sortableKeyboardCoordinates,
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
-import { useState } from 'react';
-import { X, ChevronLeft, ChevronRight, RotateCw, Trash2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, ChevronLeft, ChevronRight, RotateCw, Trash2, GripVertical } from 'lucide-react';
 import PageThumbnail, { ThumbnailCard } from './PageThumbnail';
 import UploadZone from './UploadZone';
 import SplitPanel from './SplitPanel';
 import ConvertPanel from './ConvertPanel';
+import UnlockPanel from './UnlockPanel';
 import type { ConvertFormat } from './ConvertPanel';
 import type { PageInfo } from '../utils/pdfRenderer';
 import type { Tool } from './Sidebar';
@@ -41,6 +42,7 @@ interface WorkspaceProps {
   convertFormat: ConvertFormat;
   onConvertFormatChange: (format: ConvertFormat) => void;
   acceptImages?: boolean;
+  onUnlocked?: (buffer: ArrayBuffer, fileName: string) => void;
 }
 
 export default function Workspace({
@@ -58,18 +60,29 @@ export default function Workspace({
   onSplitModeChange,
   convertFormat,
   onConvertFormatChange,
+  onUnlocked,
 }: WorkspaceProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [previewPageIndex, setPreviewPageIndex] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
-  const sensors = useSensors(
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 768px)');
+    const onChange = (e: MediaQueryListEvent | MediaQueryList) => setIsMobile(e.matches);
+    onChange(mql);
+    mql.addEventListener('change', onChange as (e: MediaQueryListEvent) => void);
+    return () => mql.removeEventListener('change', onChange as (e: MediaQueryListEvent) => void);
+  }, []);
+
+  const canDrag = !isMobile || activeTool === 'rearrange';
+
+  const allSensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 8,
       },
     }),
     useSensor(TouchSensor, {
-      // Press and hold for 250ms or move 5px to trigger drag
       activationConstraint: {
         delay: 250,
         tolerance: 5,
@@ -79,6 +92,9 @@ export default function Workspace({
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  const noSensors = useSensors();
+  const sensors = canDrag ? allSensors : noSensors;
 
   const previewPage = previewPageIndex !== null ? pages[previewPageIndex] : null;
 
@@ -93,6 +109,15 @@ export default function Workspace({
       setPreviewPageIndex(previewPageIndex + 1);
     }
   };
+
+  // Unlock tool renders its own dedicated UI
+  if (activeTool === 'unlock') {
+    return (
+      <div className="workspace">
+        <UnlockPanel onUnlocked={onUnlocked || (() => { })} />
+      </div>
+    );
+  }
 
   if (pages.length === 0) {
     return (
@@ -138,7 +163,13 @@ export default function Workspace({
           items={pages.map((p) => p.id)}
           strategy={rectSortingStrategy}
         >
-          <div className="workspace-grid">
+          {isMobile && activeTool === 'rearrange' && (
+            <div className="mobile-rearrange-hint">
+              <GripVertical size={16} />
+              <span>Press &amp; hold to drag pages into new positions</span>
+            </div>
+          )}
+          <div className={`workspace-grid ${isMobile && activeTool === 'rearrange' ? 'rearrange-active' : ''}`}>
             {pages.map((page, index) => (
               <PageThumbnail
                 key={page.id}

@@ -9,9 +9,10 @@ import {
   PanelLeft,
   Layers,
   LayoutGrid,
+  LockOpen,
 } from 'lucide-react';
 
-export type Tool = 'merge' | 'rearrange' | 'split' | 'compress' | 'convert' | 'imageToPdf';
+export type Tool = 'merge' | 'rearrange' | 'split' | 'compress' | 'convert' | 'imageToPdf' | 'unlock';
 
 interface SidebarProps {
   activeTool: Tool;
@@ -28,6 +29,7 @@ const tools: { id: Tool; label: string; icon: React.ReactNode; description: stri
   { id: 'compress', label: 'Compress', icon: <Minimize2 size={18} />, description: 'Reduce file size' },
   { id: 'convert', label: 'Convert', icon: <ArrowRightLeft size={18} />, description: 'Convert to other formats' },
   { id: 'imageToPdf', label: 'Image to PDF', icon: <ImagePlus size={18} />, description: 'Convert images to PDF' },
+  { id: 'unlock', label: 'Unlock', icon: <LockOpen size={18} />, description: 'Remove password from PDF' },
 ];
 
 export default function Sidebar({ activeTool, onSelectTool, pageCount, isOpen, onToggle }: SidebarProps) {
