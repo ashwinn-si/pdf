@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
+import { FileText } from 'lucide-react';
 import Sidebar, { type Tool } from './components/Sidebar';
 import TopBar from './components/TopBar';
 import Workspace from './components/Workspace';
@@ -48,9 +49,11 @@ function App() {
   const [compressionQuality, setCompressionQuality] = useState(60);
   const [isLoading, setIsLoading] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
 
   const fileCountRef = useRef(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dragCounter = useRef(0);
 
   // Send analytics when component mounts
   useEffect(() => {
@@ -308,8 +311,57 @@ function App() {
 
   const selectedCount = pages.filter((p) => p.selected).length;
 
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer.types && Array.from(e.dataTransfer.types).includes('Files')) {
+      dragCounter.current++;
+      setIsDraggingFile(true);
+    }
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer.types && Array.from(e.dataTransfer.types).includes('Files')) {
+      dragCounter.current--;
+      if (dragCounter.current === 0) {
+        setIsDraggingFile(false);
+      }
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDraggingFile(false);
+      dragCounter.current = 0;
+
+      const validTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
+      const files = Array.from(e.dataTransfer.files).filter(
+        (f) => validTypes.includes(f.type)
+      );
+      if (files.length > 0) {
+        handleFilesSelected(files);
+      }
+    },
+    [handleFilesSelected]
+  );
+
   return (
-    <div className="app-layout">
+    <div 
+      className="app-layout"
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
       <Sidebar
         activeTool={activeTool}
         onSelectTool={setActiveTool}
@@ -383,6 +435,18 @@ function App() {
       {/* Processing overlay */}
       {isProcessing && (
         <ProgressOverlay progress={progress} />
+      )}
+
+      {/* Global Drag Overlay */}
+      {isDraggingFile && (
+        <div className="global-drop-overlay">
+          <div className="global-drop-content">
+            <div className="upload-zone-icon dragging">
+              <FileText size={48} />
+            </div>
+            <h2>Drop files to add</h2>
+          </div>
+        </div>
       )}
 
       {/* Password Modal */}
