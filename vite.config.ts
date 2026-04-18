@@ -18,7 +18,7 @@ export default defineConfig({
         deadCodeInjectionThreshold: 0.4,
         debugProtection: false,
         debugProtectionInterval: 0,
-        disableConsoleOutput: true,
+        disableConsoleOutput: false,
         identifierNamesGenerator: 'hexadecimal',
         log: false,
         numbersToExpressions: true,
